@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+
+  db:
+    image: postgres:15
+    restart: always
+    container_name: be-pg
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: app
+      POSTGRES_USER: app
+      POSTGRES_DB: be
+    volumes:
+      - be-db-data:/var/lib/postgresql/data
+
+  be:
+    restart: always
+    container_name: be
+    build:
+      context: be
+    volumes:
+      - .:/be
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    command: gunicorn --bind 0.0.0.0:8000 be.config.wsgi
+  
+  ui:
+    restart: always
+    container_name: ui
+    build:
+      context: ui
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./ui:/opt/ui
+      - /opt/ui/node_modules
+
+volumes:
+  be-db-data:
+    driver: local
